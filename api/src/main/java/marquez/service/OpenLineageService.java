@@ -54,8 +54,9 @@ public class OpenLineageService {
                       && openLineageDao
                           .getRunState(event.getEventType())
                           .equals(RunState.COMPLETED)) {
-                    buildJobInputUpdate(update).ifPresent(runService::notify);
-                    buildJobOutputUpdate(update).ifPresent(runService::notify);
+                    //TODO: collect
+//                    buildJobInputUpdate(update).ifPresent(runService::notify);
+//                    buildJobOutputUpdate(update).ifPresent(runService::notify);
                   }
                 });
 

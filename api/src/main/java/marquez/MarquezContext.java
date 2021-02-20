@@ -122,6 +122,7 @@ public final class MarquezContext {
             runDao,
             datasetVersionDao,
             runStateDao,
+            jobDao,
             runTransitionListeners);
     this.datasetService =
         new DatasetService(
@@ -145,8 +146,8 @@ public final class MarquezContext {
     this.namespaceResource = new NamespaceResource(namespaceService);
     this.sourceResource = new SourceResource(sourceService);
     this.datasetResource =
-        new DatasetResource(namespaceService, datasetService, tagService, runService);
-    this.jobResource = new JobResource(namespaceService, jobService, runService);
+        new DatasetResource(namespaceService, datasetService, tagService, runService, sourceDao);
+    this.jobResource = new JobResource(namespaceService, jobService, runService, datasetDao);
     this.tagResource = new TagResource(tagService);
     this.openLineageResource = new OpenLineageResource(openLineageService);
 

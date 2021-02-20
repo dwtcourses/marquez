@@ -66,7 +66,7 @@ import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 
 @Slf4j
 public class DatasetService {
-  private static final Counter datasets =
+  private static final Counter datasetCounterMetric =
       Counter.build()
           .namespace("marquez")
           .name("dataset_total")
@@ -151,7 +151,7 @@ public class DatasetService {
             datasetName.getValue(),
             namespaceName.getValue(),
             datasetMeta);
-        datasets.labels(namespaceName.getValue(), datasetMeta.getType().toString()).inc();
+        datasetCounterMetric.labels(namespaceName.getValue(), datasetMeta.getType().toString()).inc();
       }
       final Version version = datasetMeta.version(namespaceName, datasetName);
       if (!datasetVersionDao.exists(version.getValue())) {

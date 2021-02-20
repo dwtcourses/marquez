@@ -24,7 +24,9 @@ import marquez.db.models.RunStateRow;
 import org.jdbi.v3.sqlobject.CreateSqlObject;
 import org.jdbi.v3.sqlobject.SqlObject;
 import org.jdbi.v3.sqlobject.config.RegisterRowMapper;
+import org.jdbi.v3.sqlobject.customizer.BindBean;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
+import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 import org.jdbi.v3.sqlobject.transaction.Transaction;
 
 @RegisterRowMapper(RunStateRowMapper.class)
@@ -42,14 +44,7 @@ public interface RunStateDao extends SqlObject {
       boolean starting,
       boolean done,
       boolean complete) {
-    withHandle(
-        handle ->
-            handle
-                .createUpdate(
-                    "INSERT INTO run_states (uuid, transitioned_at, run_uuid, state)"
-                        + "VALUES (:uuid, :transitionedAt, :runUuid, :state)")
-                .bindBean(row)
-                .execute());
+    insertRunState(row);
     // State transition
     final Instant updateAt = row.getTransitionedAt();
     createRunDao().updateRunState(row.getRunUuid(), updateAt, row.getState());
@@ -59,21 +54,19 @@ public interface RunStateDao extends SqlObject {
     if (done) {
       createRunDao().updateEndState(row.getRunUuid(), updateAt, row.getUuid());
     }
+    //Todo: This may not be right
     // Modified
     if (complete && outputVersionUuids != null && outputVersionUuids.size() > 0) {
       createDatasetDao().updateLastModifedAt(outputVersionUuids, updateAt);
     }
   }
 
+  @SqlUpdate("INSERT INTO run_states (uuid, transitioned_at, run_uuid, state)"
+      + "VALUES (:uuid, :transitionedAt, :runUuid, :state)")
+  void insertRunState(@BindBean RunStateRow row);
+
   @SqlQuery("SELECT * FROM run_states WHERE uuid = :rowUuid")
   Optional<RunStateRow> findBy(UUID rowUuid);
-
-  @SqlQuery(
-      "SELECT * FROM run_states "
-          + "WHERE run_uuid = :runUuid "
-          + "ORDER BY transitioned_at DESC "
-          + "LIMIT 1")
-  Optional<RunStateRow> findLatest(UUID runUuid);
 
   @SqlQuery("SELECT COUNT(*) FROM run_states")
   int count();

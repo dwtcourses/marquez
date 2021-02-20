@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -152,7 +153,7 @@ public class JobServiceDbTest {
             runDao,
             datasetVersionDao,
             runStateDao,
-            Lists.newArrayList(listener));
+            jobDao, Lists.newArrayList(listener));
 
     jobService =
         new JobService(
@@ -280,13 +281,13 @@ public class JobServiceDbTest {
     assertThat(run.getId()).isNotNull();
     assertThat(run.getStartedAt().isPresent()).isFalse();
 
-    runService.markRunAs(run.getId(), RUNNING);
+    runService.markRunAs(run.getId(), RUNNING, Instant.now());
     Optional<Run> startedRun = runService.getRun(run.getId());
     assertThat(startedRun.isPresent()).isTrue();
     assertThat(startedRun.get().getStartedAt()).isNotNull();
     assertThat(startedRun.get().getEndedAt().isPresent()).isFalse();
 
-    runService.markRunAs(run.getId(), COMPLETED);
+    runService.markRunAs(run.getId(), COMPLETED, Instant.now());
     Optional<Run> endedRun = runService.getRun(run.getId());
     assertThat(endedRun.isPresent()).isTrue();
     assertThat(endedRun.get().getStartedAt()).isEqualTo(startedRun.get().getStartedAt());

@@ -22,11 +22,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.net.URI;
-import java.net.URL;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import lombok.NonNull;
@@ -53,15 +52,10 @@ import marquez.db.models.DatasetRow;
 import marquez.db.models.DatasetVersionRow;
 import marquez.db.models.ExtendedDatasetRow;
 import marquez.db.models.ExtendedRunRow;
-import marquez.db.models.JobContextRow;
 import marquez.db.models.JobRow;
-import marquez.db.models.JobVersionRow;
 import marquez.db.models.NamespaceOwnershipRow;
 import marquez.db.models.NamespaceRow;
 import marquez.db.models.OwnerRow;
-import marquez.db.models.RunArgsRow;
-import marquez.db.models.RunRow;
-import marquez.db.models.RunStateRow;
 import marquez.db.models.SourceRow;
 import marquez.db.models.StreamVersionRow;
 import marquez.db.models.TagRow;
@@ -72,11 +66,9 @@ import marquez.service.models.DbTable;
 import marquez.service.models.DbTableMeta;
 import marquez.service.models.DbTableVersion;
 import marquez.service.models.Job;
-import marquez.service.models.JobMeta;
 import marquez.service.models.Namespace;
 import marquez.service.models.NamespaceMeta;
 import marquez.service.models.Run;
-import marquez.service.models.RunMeta;
 import marquez.service.models.Source;
 import marquez.service.models.SourceMeta;
 import marquez.service.models.Stream;
@@ -356,15 +348,15 @@ public final class Mapper {
   public static Tag toTag(@NonNull final TagRow row) {
     return new Tag(TagName.of(row.getName()), row.getDescription().orElse(null));
   }
-
-  public static List<Tag> toTags(@NonNull final List<TagRow> rows) {
-    return rows.stream().map(Mapper::toTag).collect(toImmutableList());
-  }
-
+//
+//  public static List<Tag> toTags(@NonNull final List<TagRow> rows) {
+//    return rows.stream().map(Mapper::toTag).collect(toImmutableList());
+//  }
+//
   public static Job toJob(
       @NonNull final JobRow row,
-      @NonNull final ImmutableSet<DatasetId> inputs,
-      @NonNull final ImmutableSet<DatasetId> outputs,
+      @NonNull final Set<DatasetId> inputs,
+      @NonNull final Set<DatasetId> outputs,
       @Nullable final String locationString,
       @NonNull final String contextString,
       @Nullable final ExtendedRunRow runRow) {
@@ -381,55 +373,57 @@ public final class Mapper {
         row.getDescription().orElse(null),
         (runRow == null) ? null : toRun(runRow));
   }
-
-  public static JobRow toJobRow(
-      @NonNull final NamespaceRow namespace,
-      @NonNull final JobName name,
-      @NonNull final JobMeta meta) {
-    final Instant now = Instant.now();
-    return new JobRow(
-        newRowUuid(),
-        meta.getType().toString(),
-        now,
-        now,
-        namespace.getUuid(),
-        namespace.getName(),
-        name.getValue(),
-        meta.getDescription().orElse(null),
-        null);
-  }
-
-  public static JobContextRow toJobContextRow(
-      @NonNull final Map<String, String> context, @NonNull final String checksum) {
-    return new JobContextRow(newRowUuid(), newTimestamp(), Utils.toJson(context), checksum);
-  }
-
-  public static JobVersionRow toJobVersionRow(
-      @NonNull final UUID jobRowUuid,
-      @NonNull final String jobName,
-      @NonNull final UUID jobContextRowUuid,
-      @NonNull final List<UUID> inputs,
-      @NonNull final List<UUID> outputs,
-      @Nullable final URL location,
-      @NonNull final Version version,
-      @NonNull final UUID namespaceUuid,
-      @NonNull final String namespaceName) {
-    final Instant now = newTimestamp();
-    return new JobVersionRow(
-        newRowUuid(),
-        now,
-        now,
-        jobRowUuid,
-        jobName,
-        jobContextRowUuid,
-        inputs,
-        outputs,
-        (location == null) ? null : location.toString(),
-        version.getValue(),
-        null,
-        namespaceUuid,
-        namespaceName);
-  }
+//
+//  public static JobRow toJobRow(
+//      @NonNull final NamespaceRow namespace,
+//      @NonNull final JobName name,
+//      @NonNull final JobMeta meta) {
+//    final Instant now = Instant.now();
+//    return new JobRow(
+//        newRowUuid(),
+//        meta.getType().toString(),
+//        now,
+//        now,
+//        namespace.getUuid(),
+//        namespace.getName(),
+//        name.getValue(),
+//        meta.getDescription().orElse(null),
+//        null,
+//        null,
+//        null);
+//  }
+//
+//  public static JobContextRow toJobContextRow(
+//      @NonNull final Map<String, String> context, @NonNull final String checksum) {
+//    return new JobContextRow(newRowUuid(), newTimestamp(), Utils.toJson(context), checksum);
+//  }
+//
+//  public static JobVersionRow toJobVersionRow(
+//      @NonNull final UUID jobRowUuid,
+//      @NonNull final String jobName,
+//      @NonNull final UUID jobContextRowUuid,
+//      @NonNull final List<UUID> inputs,
+//      @NonNull final List<UUID> outputs,
+//      @Nullable final URL location,
+//      @NonNull final Version version,
+//      @NonNull final UUID namespaceUuid,
+//      @NonNull final String namespaceName) {
+//    final Instant now = newTimestamp();
+//    return new JobVersionRow(
+//        newRowUuid(),
+//        now,
+//        now,
+//        jobRowUuid,
+//        jobName,
+//        jobContextRowUuid,
+//        inputs,
+//        outputs,
+//        (location == null) ? null : location.toString(),
+//        version.getValue(),
+//        null,
+//        namespaceUuid,
+//        namespaceName);
+//  }
 
   public static Run toRun(@NonNull final ExtendedRunRow row) {
     Optional<Long> durationMs =
@@ -446,50 +440,55 @@ public final class Mapper {
         row.getStartedAt().orElse(null),
         row.getEndedAt().orElse(null),
         durationMs.orElse(null),
-        Utils.fromJson(row.getArgs(), new TypeReference<ImmutableMap<String, String>>() {}));
+        Utils.fromJson(row.getArgs(), new TypeReference<ImmutableMap<String, String>>() {}),
+        row.getNamespaceName(),
+        row.getJobName()
+    );
   }
 
   public static List<Run> toRuns(@NonNull final List<ExtendedRunRow> rows) {
     return rows.stream().map(Mapper::toRun).collect(toImmutableList());
   }
-
-  public static RunRow toRunRow(
-      @NonNull final UUID jobVersionUuid,
-      @NonNull final UUID runArgsUuid,
-      @NonNull final List<UUID> inputVersionUuids,
-      @NonNull final RunMeta runMeta) {
-    final Instant now = newTimestamp();
-    return new RunRow(
-        runMeta.getId().map(runId -> runId.getValue()).orElseGet(Mapper::newRowUuid),
-        now,
-        now,
-        jobVersionUuid,
-        runArgsUuid,
-        inputVersionUuids,
-        runMeta.getNominalStartTime().orElse(null),
-        runMeta.getNominalEndTime().orElse(null),
-        null,
-        null,
-        null,
-        null,
-        null);
-  }
-
-  public static RunArgsRow toRunArgsRow(
-      @NonNull final Map<String, String> args, @NonNull final String checksum) {
-    return new RunArgsRow(newRowUuid(), newTimestamp(), Utils.toJson(args), checksum);
-  }
-
-  public static RunStateRow toRunStateRow(
-      @NonNull final UUID runId,
-      @NonNull final RunState runState,
-      @Nullable Instant transitionedAt) {
-    return new RunStateRow(
-        newRowUuid(),
-        transitionedAt == null ? newTimestamp() : transitionedAt,
-        runId,
-        runState.name());
-  }
+//
+//  public static RunRow toRunRow(
+//      @NonNull final UUID jobVersionUuid,
+//      @NonNull final UUID runArgsUuid,
+//      @NonNull final List<UUID> inputVersionUuids,
+//      @NonNull final RunMeta runMeta) {
+//    final Instant now = newTimestamp();
+//    return new RunRow(
+//        runMeta.getId().map(runId -> runId.getValue()).orElseGet(Mapper::newRowUuid),
+//        now,
+//        now,
+//        jobVersionUuid,
+//        runArgsUuid,
+//        inputVersionUuids,
+//        runMeta.getNominalStartTime().orElse(null),
+//        runMeta.getNominalEndTime().orElse(null),
+//        null,
+//        null,
+//        null,
+//        null,
+//        null,
+//        null,
+//        );
+//  }
+//
+//  public static RunArgsRow toRunArgsRow(
+//      @NonNull final Map<String, String> args, @NonNull final String checksum) {
+//    return new RunArgsRow(newRowUuid(), newTimestamp(), Utils.toJson(args), checksum);
+//  }
+//
+//  public static RunStateRow toRunStateRow(
+//      @NonNull final UUID runId,
+//      @NonNull final RunState runState,
+//      @Nullable Instant transitionedAt) {
+//    return new RunStateRow(
+//        newRowUuid(),
+//        transitionedAt == null ? newTimestamp() : transitionedAt,
+//        runId,
+//        runState.name());
+//  }
 
   private static UUID newRowUuid() {
     return UUID.randomUUID();
@@ -498,15 +497,15 @@ public final class Mapper {
   private static Instant newTimestamp() {
     return Instant.now();
   }
-
-  public static ImmutableMap<String, String> toRunArgs(String args) {
-    if (args == null) {
-      return null;
-    }
-    return Utils.fromJson(
-        args,
-        Utils.getMapper()
-            .getTypeFactory()
-            .constructMapType(ImmutableMap.class, String.class, String.class));
-  }
+//
+//  public static ImmutableMap<String, String> toRunArgs(String args) {
+//    if (args == null) {
+//      return null;
+//    }
+//    return Utils.fromJson(
+//        args,
+//        Utils.getMapper()
+//            .getTypeFactory()
+//            .constructMapType(ImmutableMap.class, String.class, String.class));
+//  }
 }

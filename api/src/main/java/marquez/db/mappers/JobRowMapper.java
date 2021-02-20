@@ -22,8 +22,10 @@ import static marquez.db.Columns.uuidOrThrow;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.Set;
 import lombok.NonNull;
+import marquez.common.models.DatasetId;
 import marquez.db.Columns;
 import marquez.db.MapperUtils;
 import marquez.db.models.JobRow;
@@ -40,12 +42,26 @@ public final class JobRowMapper implements RowMapper<JobRow> {
         stringOrThrow(results, Columns.TYPE),
         timestampOrThrow(results, Columns.CREATED_AT),
         timestampOrThrow(results, Columns.UPDATED_AT),
-        uuidOrThrow(results, Columns.NAMESPACE_UUID),
         columnNames.contains(Columns.NAMESPACE_NAME)
             ? stringOrThrow(results, Columns.NAMESPACE_NAME)
             : "",
         stringOrThrow(results, Columns.NAME),
         stringOrNull(results, Columns.DESCRIPTION),
-        uuidOrNull(results, Columns.CURRENT_VERSION_UUID));
+        uuidOrNull(results, Columns.CURRENT_VERSION_UUID),
+        uuidOrNull(results, "job_context_template_uuid"),
+        stringOrNull(results, "location_template"),
+        getDatasetFromJsonOrNull(results, "inputs_template"),
+        getDatasetFromJsonOrNull(results, "outputs_template")
+        );
   }
+
+  Set<DatasetId> getDatasetFromJsonOrNull(@NonNull ResultSet results,
+      String column) throws SQLException {
+    if (results.getObject(column) == null) {
+      return null;
+    }
+    Object o = results.getObject(column);
+    return new HashSet<>();
+  }
+
 }
