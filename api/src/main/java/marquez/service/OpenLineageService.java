@@ -47,16 +47,15 @@ public class OpenLineageService {
 
   public CompletableFuture<Void> createAsync(LineageEvent event) {
     CompletableFuture marquez =
-        CompletableFuture.supplyAsync(() -> openLineageDao.updateMarquezModel(event))
+        CompletableFuture.supplyAsync(() -> openLineageDao.updateMarquezModel(event, mapper))
             .thenAccept(
                 (update) -> {
                   if (event.getEventType() != null
                       && openLineageDao
                           .getRunState(event.getEventType())
                           .equals(RunState.COMPLETED)) {
-                    //TODO: collect
-//                    buildJobInputUpdate(update).ifPresent(runService::notify);
-//                    buildJobOutputUpdate(update).ifPresent(runService::notify);
+                    buildJobInputUpdate(update).ifPresent(runService::notify);
+                    buildJobOutputUpdate(update).ifPresent(runService::notify);
                   }
                 });
 
@@ -79,7 +78,7 @@ public class OpenLineageService {
     RunId runId = RunId.of(record.getRun().getUuid());
     JobVersionId jobVersionId =
         JobVersionId.builder()
-            .versionUuid(record.getJobVersion().getUuid())
+            .versionUuid(record.getJobVersionBag().getJobVersionRow().getUuid())
             .namespace(NamespaceName.of(record.getNamespace().getName()))
             .name(JobName.of(record.getJob().getName()))
             .build();
@@ -91,7 +90,7 @@ public class OpenLineageService {
     RunId runId = RunId.of(record.getRun().getUuid());
     JobVersionId jobVersionId =
         JobVersionId.builder()
-            .versionUuid(record.getJobVersion().getUuid())
+            .versionUuid(record.getJobVersionBag().getJobVersionRow().getUuid())
             .namespace(NamespaceName.of(record.getNamespace().getName()))
             .name(JobName.of(record.getJob().getName()))
             .build();

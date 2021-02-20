@@ -17,11 +17,11 @@ package marquez.db;
 import static marquez.db.OpenLineageDao.DEFAULT_NAMESPACE_OWNER;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableSet;
 import java.net.URL;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import marquez.common.Utils;
 import marquez.common.models.DatasetId;
@@ -101,7 +101,7 @@ public interface JobDao extends MarquezDao {
     return url.toString();
   }
 
-  default PGobject toJson(ImmutableSet<DatasetId> dataset, ObjectMapper mapper) {
+  default PGobject toJson(Set<DatasetId> dataset, ObjectMapper mapper) {
     try {
       PGobject jsonObject = new PGobject();
       jsonObject.setType("json");

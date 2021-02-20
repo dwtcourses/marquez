@@ -74,15 +74,17 @@ public interface OpenLineageDao extends MarquezDao {
       String producer);
 
   @Transaction
-  default UpdateLineageRow updateMarquezModel(LineageEvent event) {
-    UpdateLineageRow updateLineageRow = updateBaseMarquezModel(event);
+  default UpdateLineageRow updateMarquezModel(LineageEvent event,
+      ObjectMapper mapper) {
+    UpdateLineageRow updateLineageRow = updateBaseMarquezModel(event, mapper);
     if (event.getEventType() != null && getRunState(event.getEventType()) == RunState.COMPLETED) {
       updateMarquezOnComplete(event, updateLineageRow);
     }
     return updateLineageRow;
   }
 
-  default UpdateLineageRow updateBaseMarquezModel(LineageEvent event) {
+  default UpdateLineageRow updateBaseMarquezModel(LineageEvent event,
+      ObjectMapper mapper) {
      NamespaceDao namespaceDao = createNamespaceDao();
     DatasetDao datasetDao = createDatasetDao();
     SourceDao sourceDao = createSourceDao();
@@ -134,8 +136,8 @@ public interface OpenLineageDao extends MarquezDao {
             description,
             jobContext.getUuid(),
             location,
-            toDatasetId(event.getInputs()),
-            toDatasetId(event.getOutputs())
+            jobDao.toJson(toDatasetId(event.getInputs()), mapper),
+            jobDao.toJson(toDatasetId(event.getOutputs()), mapper)
         );
     bag.setJob(job);
 
