@@ -125,7 +125,7 @@ public class JobService {
         jobRow.getInputs(),
         jobRow.getOutputs(),
         jobRow.getLocation(),
-        jobContextRow.map(JobContextRow::getContext).orElse(""),
+        jobContextRow.map(JobContextRow::getContext).orElse("{}"),
         null);
   }
 }

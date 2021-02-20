@@ -111,7 +111,7 @@ public interface JobVersionDao extends MarquezDao {
   void updateLatestRun(UUID rowUuid, Instant updatedAt, UUID latestRunUuid);
 
   final String EXTENDED_SELECT =
-      "SELECT jv.namespace_uuid, jv.*, jc.uuid AS job_context_uuid, jc.context, jv.namespace_name, jv.job_name as name, "
+      "SELECT jv.namespace_uuid, jv.*, jc.uuid AS job_context_uuid, jc.context, jv.namespace_name, jv.job_name, "
           + "ARRAY(SELECT dataset_uuid "
           + "      FROM job_versions_io_mapping "
           + "      WHERE job_version_uuid = jv.uuid AND "

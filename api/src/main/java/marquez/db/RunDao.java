@@ -27,6 +27,7 @@ import marquez.common.Utils;
 import marquez.common.models.DatasetId;
 import marquez.common.models.JobName;
 import marquez.common.models.NamespaceName;
+import marquez.common.models.RunId;
 import marquez.common.models.RunState;
 import marquez.db.mappers.ExtendedRunRowMapper;
 import marquez.db.models.ExtendedDatasetRow;
@@ -237,7 +238,7 @@ public interface RunDao extends MarquezDao {
   default void notifyJobChange(UUID runUuid, JobRow jobRow, JobMeta jobMeta) {
     DatasetDao datasetDao = createDatasetDao();
 
-    upsertRun(runUuid, jobRow.getUuid(), jobRow.getName(), jobRow.getNamespaceName());
+    upsertRun(runUuid, jobRow.getName(), jobRow.getNamespaceName());
 
     if (jobMeta.getInputs() != null) {
       for (DatasetId datasetId : jobMeta.getInputs()) {
@@ -250,10 +251,10 @@ public interface RunDao extends MarquezDao {
     }
   }
 
-  @SqlUpdate("UPDATE runs SET job_uuid = :jobUuid, job_name = :jobName, "
-      + "namespace_name = :namespaceName"
+  @SqlUpdate("UPDATE runs SET job_name = :jobName, "
+      + "namespace_name = :namespaceName "
       + "WHERE uuid = :runUuid")
-  void upsertRun(UUID runUuid, @NonNull UUID jobUuid, @NonNull String jobName,
+  void upsertRun(UUID runUuid, @NonNull String jobName,
       @NonNull String namespaceName);
 
   /**
@@ -263,14 +264,15 @@ public interface RunDao extends MarquezDao {
   default RunRow upsertFromRun(NamespaceName namespaceName, JobName jobName, RunMeta runMeta,
       RunState currentState) {
     Instant now = Instant.now();
-    //Always upsert namespace
+
     NamespaceRow namespaceRow = createNamespaceDao()
         .upsert(UUID.randomUUID(), now, namespaceName.getValue(), DEFAULT_NAMESPACE_OWNER);
 
     RunArgsRow runArgsRow = createRunArgsDao()
         .upsert(UUID.randomUUID(), now, Utils.toJson(runMeta.getArgs()), Utils.checksumFor(runMeta.getArgs()));
 
-    UUID uuid = UUID.randomUUID();
+    UUID uuid = runMeta.getId().map(RunId::getValue).orElse(UUID.randomUUID());
+
     return upsertFromRun(uuid, null, now, null, runArgsRow.getUuid(), runMeta.getNominalStartTime().orElse(null),
         runMeta.getNominalEndTime().orElse(null), currentState, now,
         namespaceRow.getName(), jobName.getValue());

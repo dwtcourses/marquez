@@ -7,6 +7,7 @@ import static marquez.common.Utils.VERSION_JOINER;
 import static marquez.common.models.RunState.COMPLETED;
 import static marquez.common.models.RunState.NEW;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.Collection;
@@ -20,6 +21,7 @@ import javax.annotation.Nullable;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import marquez.api.exceptions.RunNotFoundException;
+import marquez.common.Utils;
 import marquez.common.models.DatasetName;
 import marquez.common.models.DatasetVersionId;
 import marquez.common.models.JobName;
@@ -144,12 +146,19 @@ public class RunService {
   public void notifyCompleteHandler(ExtendedRunRow runRow, Instant transitionedAt) {
     JobVersionBag jobVersionBag = jobVersionDao.createJobVersionOnComplete(transitionedAt, runRow.getUuid(), runRow.getNamespaceName(), runRow.getJobName());
 
-    notify(new JobOutputUpdate(RunId.of(runRow.getUuid()), toJobVersionId(jobVersionBag.getJobVersionRow()), buildRunOutputs(jobVersionBag.getOutputs())));
-    notify(new JobInputUpdate(RunId.of(runRow.getUuid()), buildRunMeta(null), toJobVersionId(jobVersionBag.getJobVersionRow()), buildRunInputs(jobVersionBag.getInputs())));
+    notify(new JobOutputUpdate(RunId.of(runRow.getUuid()),
+        toJobVersionId(jobVersionBag.getJobVersionRow()),
+          buildRunOutputs(jobVersionBag.getOutputs())));
+    notify(new JobInputUpdate(RunId.of(runRow.getUuid()), buildRunMeta(runRow),
+        toJobVersionId(jobVersionBag.getJobVersionRow()), buildRunInputs(jobVersionBag.getInputs())));
   }
 
   private RunMeta buildRunMeta(ExtendedRunRow runRow) {
-    return null;
+    return new RunMeta(RunId.of(runRow.getUuid()),
+        runRow.getNominalStartTime().orElse(null),
+        runRow.getNominalEndTime().orElse(null),
+        Utils.fromJson(runRow.getArgs(), new TypeReference<Map<String, String>>() {})
+        );
   }
 
   private List<RunInput> buildRunInputs(List<ExtendedDatasetVersionRow> inputs) {

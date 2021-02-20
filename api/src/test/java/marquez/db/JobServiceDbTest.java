@@ -322,8 +322,8 @@ public class JobServiceDbTest {
   }
 
   @Test
-  public void testRunWithId() throws MarquezServiceException, MalformedURLException {
-    JobName jobName = JobName.of("MY_JOB2");
+  public void testRunWithId() throws MarquezServiceException {
+    JobName jobName = JobName.of("MY_JOB2" + UUID.randomUUID());
     Job job =
         jobService.createOrUpdate(
             NAMESPACE_NAME,

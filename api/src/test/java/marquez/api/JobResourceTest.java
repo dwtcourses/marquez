@@ -19,6 +19,7 @@ import static marquez.service.models.ModelGenerator.newRunState;
 import static marquez.service.models.ModelGenerator.newRunWith;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -98,6 +99,7 @@ public class JobResourceTest {
 
     when(namespaceService.exists(NAMESPACE_NAME)).thenReturn(true);
     when(jobService.createOrUpdate(NAMESPACE_NAME, JOB_NAME, jobMeta)).thenReturn(job);
+    when(datasetDao.exists(any(), any())).thenReturn(true);
 
     final Response response = jobResource.createOrUpdate(NAMESPACE_NAME, JOB_NAME, jobMeta);
     assertThat(response.getStatus()).isEqualTo(200);
@@ -160,7 +162,7 @@ public class JobResourceTest {
     final UriInfo uriInfo = mock(UriInfo.class);
 
     final RunMeta runMeta = newRunMeta();
-    final Run run = toRun(runMeta);
+    final Run run = toRun(runMeta, NAMESPACE_NAME, JOB_NAME);
     final URI runLocation = toRunLocation(NAMESPACE_NAME, JOB_NAME, run);
 
     when(namespaceService.exists(NAMESPACE_NAME)).thenReturn(true);
@@ -181,7 +183,7 @@ public class JobResourceTest {
 
     final RunId newRunId = newRunId();
     final RunMeta runMeta = newRunMeta(newRunId);
-    final Run run = toRun(runMeta);
+    final Run run = toRun(runMeta, NAMESPACE_NAME, JOB_NAME);
     final URI runLocation = toRunLocation(NAMESPACE_NAME, JOB_NAME, run);
 
     when(namespaceService.exists(NAMESPACE_NAME)).thenReturn(true);
@@ -358,7 +360,8 @@ public class JobResourceTest {
         null);
   }
 
-  static Run toRun(final RunMeta runMeta) {
+  static Run toRun(final RunMeta runMeta, NamespaceName namespaceName,
+      JobName jobName) {
     final Instant now = newTimestamp();
     return new Run(
         runMeta.getId().orElseGet(ModelGenerator::newRunId),
@@ -371,8 +374,8 @@ public class JobResourceTest {
         null,
         null,
         runMeta.getArgs(),
-        null,
-        null);
+        namespaceName.getValue(),
+        jobName.getValue());
   }
 
   static URI toRunLocation(
